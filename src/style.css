@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme{
+    --color-background: #fafbfc ;
+    --color-foreground:#1a202c;
+    --color-primary:#6366f1;
+    --color-secondary:#f1f5f9;
+    --animate-animate-on-load : fadeInSlideUp 1s ease-out forwards;
+
+    @keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+}
+
+/* 
+.fade-enter-active,
+.fade-leave-active {
+  @apply transition-all duration-300;
+}
+
+.fade-enter-from {
+  @apply opacity-0 -translate-x-8;
+}
+.fade-enter-to {
+  @apply opacity-100 translate-x-0;
+}
+
+.fade-leave-from {
+  @apply opacity-100 translate-x-0;
+}
+.fade-leave-to {
+  @apply opacity-0 -translate-x-8;
+} */
