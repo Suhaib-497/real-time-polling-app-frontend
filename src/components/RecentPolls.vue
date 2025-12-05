@@ -1,5 +1,6 @@
 <script setup>
 const { questions } = defineProps(['questions']);
+import { computed } from 'vue';
 import { usePollStore } from '../stories/pollStore'
 // console.log(this.questions);
 // console.log(questions[0]);
@@ -9,6 +10,12 @@ const pollStore = usePollStore();
 function goToVote(Polls) {
     pollStore.setPolls(Polls);
 }
+
+// const totalVotes = computed(() => {
+//     return questions.value.options?.reduce((sum, option) => sum + option.votes_count, 0);
+// });
+
+// console.log(questions);
 
 </script>
 <template>
@@ -141,7 +148,7 @@ function goToVote(Polls) {
             </div>
 
             <div class="flex gap-2 items-center">
-                <router-link :to="{ name: 'CastVote' }" @click.native="goToVote(question)" class=" inline-flex gap-2 justify-center items-center  text-white bg-primary border border-gray-200 
+                <router-link :to="{ name: 'CastVote',params:{optionId:question.id} }" @click.native="goToVote(question)" class=" inline-flex gap-2 justify-center items-center  text-white bg-primary border border-gray-200 
                  font-medium text-sm  w-full rounded-lg py-1 
                     hover:shadow-sm
                             transform transition-all duration-300 ">
@@ -155,7 +162,7 @@ function goToVote(Polls) {
                     Vote Now
                 </router-link>
 
-                <router-link to="/result" class="inline-flex justify-center items-center bg-gray-50 border border-gray-200 text-sm  w-full rounded-lg py-1 font-medium
+                <router-link :to="{ name: 'result',params:{pollId:question.id} }"  class="inline-flex justify-center items-center bg-gray-50 border border-gray-200 text-sm  w-full rounded-lg py-1 font-medium
                             hover:bg-primary/20 hover:text-blue-800
                             transform transition-all duration-300 ">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

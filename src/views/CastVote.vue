@@ -1,31 +1,70 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+const props = defineProps({
+    optionId: [String, Number]
+})
+import { computed, onMounted, ref } from 'vue';
 import TabsSection from '../components/TabsSection.vue';
 import MainLayout from '../layouts/MainLayout.vue';
-import { usePollStore } from '../stories/pollStore'
 import axiosClient from '../api/axiosClient';
+import { useRouter } from 'vue-router';
 
 
-const questions = ref(0);
-const pollStore = usePollStore();
-const polls = pollStore.polls;
+const totalVotes = ref(0)
+const questions = ref([]);
+const router = useRouter();
 const selectedOption = ref('');
-console.log(polls.options);
+// console.log(polls.options);
+
+onMounted(async () => {
+    // console.log('optionId prop:', props.optionId); // should log 12
+
+    window.Echo.channel('votes')
+        .listen('.VoteCast', (e: any) => {
+            console.log('Vote received:', e)
+            totalVotes.value++;
+            // Example: update your options or vote counts here
+        })
 
 
-onMounted(() => {
+
+
+    try {
+        const token = localStorage.getItem("token");
+        const response = await axiosClient.get(`/show/${props.optionId}`);
+        questions.value = response.data;
+        console.log(questions.value.questions)
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+
+
+
+
 
 })
 
 const submitForm = async () => {
 
     try {
+        if (!selectedOption.value) {
+            // simple client-side validation
+            alert('Please select an option before submitting your vote.');
+            return;
+        }
+
+        console.log('Selected Option ID:', selectedOption.value);
         await axiosClient.post(`/polls/${selectedOption.value}/vote`)
+        setTimeout(() => {
+            // navigate to results page for this poll
+            router.push(`/result/${props.optionId}`);
+        }, 500)
     } catch (error) {
+        console.error('Error submitting vote:', error);
 
     }
 
-    console.log(selectedOption.value)
+    // console.log(selectedOption.value)
 }
 </script>
 
@@ -77,7 +116,8 @@ const submitForm = async () => {
                                     <path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"></path>
                                     <path d="M22 19H2"></path>
                                 </svg>
-                                {{ polls.question }}
+
+                                {{ questions.questions }}
                             </h4>
 
                             <p class="inline-flex items-center justify-center gap-2 text-gray-400">
@@ -93,30 +133,19 @@ const submitForm = async () => {
                             </p>
                         </div>
                         <!-- v-model="selectedOption"  -->
-                        <div v-for="option in polls.options" class="w-full space-y-4">
-                            <div :key="option.id" tabindex="0" class="group flex items-center gap-2 border border-gray-200 w-full rounded-lg p-4 text-sm 
+                        <div v-for="option in questions.options" :key="option.id" class="w-full space-y-4">
+                            <label tabindex="0" class="group flex items-center gap-2 border border-gray-200 w-full rounded-lg p-4 text-sm cursor-pointer
                                 transition-all duration-200 
                                 hover:border-primary/40 hover:bg-indigo-50
                                 hover:scale-[1.02]
-                                focus:border-primary focus:bg-indigo-50 focus:shadow-md" data-aos="slide-right"
-                                data-aos-duration="600" data-aos-delay="800">
-                                <input :value="option.id" type="radio" v-model="selectedOption"
-                                    class="appearance-none w-4 h-4 border border-primary rounded-full group-focus:bg-primary">
-                                {{ option.option_text }}
-                                {{ selectedOption }}
+                                focus-within:border-primary focus-within:bg-indigo-50 focus-within:shadow-md"
+                                data-aos="slide-right" data-aos-duration="600" data-aos-delay="800">
+                                <input :value="option.id" type="radio" v-model="selectedOption" name="pollOption"
+                                    class="w-4 h-4 border border-primary rounded-full" />
+                                <span class="ml-2">{{ option.option_text }}</span>
+                            </label>
 
-                            </div>
 
-                            <!-- <div tabindex="0" class="group flex items-center gap-2 border border-gray-200 w-full rounded-lg p-4 text-sm 
-                                transition-all duration-200 
-                                hover:border-primary/40 hover:bg-indigo-50
-                                hover:scale-[1.02]
-                                focus:border-primary focus:bg-indigo-50 focus:shadow-md"
-                                data-aos="slide-right" data-aos-duration="600" data-aos-delay="900">
-                                <input type="checkbox"
-                                    class="appearance-none w-4 h-4 border border-primary rounded-full group-focus:bg-primary">
-                                Question?
-                            </div> -->
                         </div>
 
                         <button type="submit" class="inline-flex items-center justify-center gap-2 text-white text-sm px-3 py-1 rounded-lg w-full shadow-md

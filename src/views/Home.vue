@@ -22,9 +22,6 @@ onMounted(
     } catch (error) {
         console.error('Error fetching data:', error);
     }
-
-
-
 })
 
 const router=useRouter();
@@ -35,6 +32,7 @@ const logout=()=>{
     router.push("/login");
 
 }
+
 </script>
 
 <template>
@@ -43,16 +41,13 @@ const logout=()=>{
         <div class="flex flex-col gap-8 w-full">
             <button @click="logout">logout</button>
             <!-- top -->
-            <TabsSection data-aos="fade-down" data-aos-duration="800"/>
+            <TabsSection data-aos="fade-down" data-aos-duration="800" />
 
             <!-- middle -->
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ">
 
-                <router-link 
-                to="/create"
-                    data-aos="fade-up" 
-                    data-aos-delay="100"
+                <router-link to="/create" data-aos="fade-up" data-aos-delay="100"
                     class="group transform  hover:-translate-y-2  w-full gap-8 border-gray-400 bg-white shadow-md transition-all duration-400 rounded-xl p-6 cursor-pointer">
                     <div class="flex items-center justify-between ">
 
@@ -71,11 +66,35 @@ const logout=()=>{
                             </svg>
                         </div>
                     </div>
-               </router-link>
+                </router-link>
 
-                <div
-                    data-aos="fade-up" 
-                    data-aos-delay="200"
+                <router-link to="/create" data-aos="fade-up" data-aos-delay="100"
+                    class="group transform  hover:-translate-y-2  w-full gap-8 border-gray-400 bg-white shadow-md transition-all duration-700 rounded-xl p-6 cursor-pointer">
+                    <div class="flex items-center justify-between ">
+
+                        <div class="flex flex-col">
+                            <span class="font-medium">0</span>
+                            <span class="text-sm text-gray-400">Saved  Drafts</span>
+                        </div>
+
+                        <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-all duration-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-file-text h-5 w-5 text-blue-600"
+                                aria-hidden="true">
+                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z">
+
+                                </path>
+                                <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                                <path d="M10 9H8"></path>
+                                <path d="M16 13H8"></path>
+                                <path d="M16 17H8"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </router-link>
+
+                <div data-aos="fade-up" data-aos-delay="200"
                     class=" w-full gap-8 border-gray-400 bg-white shadow-md transition-all duration-200 rounded-xl p-6 ">
                     <div class="flex items-center justify-between ">
 
@@ -95,9 +114,7 @@ const logout=()=>{
                     </div>
                 </div>
 
-                <div
-                    data-aos="fade-up" 
-                    data-aos-delay="300"
+                <div data-aos="fade-up" data-aos-delay="300"
                     class=" w-full gap-8 border-gray-400 bg-white shadow-md transition-all duration-200 rounded-xl p-6 ">
                     <div class="flex items-center justify-between ">
 
@@ -122,11 +139,7 @@ const logout=()=>{
             </div>
 
             <!-- down part -->
-            <div
-            v-if="questions.length === 0"
-                data-aos="fade-zoom-in" 
-                data-aos-delay="400"
-                data-aos-duration="1000"
+            <div v-if="questions.length === 0" data-aos="fade-zoom-in" data-aos-delay="400" data-aos-duration="1000"
                 class=" border-gray-400 bg-white shadow-md transition-all duration-200 rounded-xl p-12 max-w-md  mx-auto w-full ">
                 <div class=" flex flex-col justify-center items-center align-middle gap-2 ">
 
@@ -170,7 +183,7 @@ const logout=()=>{
             <div v-else="questions.length>0" data-aos="fade-up" data-aos-delay="500" class="space-y-6">
                 <RecentPolls :questions="questions" />
             </div>
-            
+
 
         </div>
 

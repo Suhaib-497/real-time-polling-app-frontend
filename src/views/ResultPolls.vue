@@ -1,7 +1,55 @@
 <script setup>
+const props = defineProps({
+    pollId: [String, Number]
+})
 import TabsSection from '../components/TabsSection.vue';
 import MainLayout from '../layouts/MainLayout.vue';
-import blackBar from '../assets/icons/blackBar.svg'
+import blackBar from '../assets/icons/blackBar.svg';
+import { computed, onMounted, ref } from 'vue';
+import axiosClient from '../api/axiosClient';
+import SocialSharing from 'vue-social-sharing';
+const questions = ref([]);
+const currentUrl = ref();
+onMounted(async () => {
+
+
+    try {
+        const token = localStorage.getItem("token");
+
+        const response = await axiosClient.get(`/countOption/${props.pollId}`)
+        questions.value = response.data.poll;
+        console.log(questions.value);
+        currentUrl.value = response.data.current_url;
+        console.log(currentUrl.value);
+    } catch (error) {
+
+        if (error.response) {
+
+            console.error('API Error:', error.response.data);
+        } else if (error.request) {
+
+            console.error('Network Error:', error.request);
+        } else {
+
+            console.error('Error:', error.message);
+        }
+
+    }
+
+})
+
+
+const mostVotes = computed(() => {
+    if (!questions.value || !questions.value.options) return 0;
+    const votes = questions.value.options.map(opt => opt.votes_count);
+    return Math.max(...votes);
+});
+
+
+const totalVotes = computed(() => {
+    return questions.value.options?.reduce((sum, option) => sum + option.votes_count, 0);
+});
+
 </script>
 <template>
     <MainLayout>
@@ -15,6 +63,15 @@ import blackBar from '../assets/icons/blackBar.svg'
                     Explore detailed analytics and response patterns.
                 </template>
             </TabsSection>
+            
+            <social-sharing :url="currentUrl" :title="'post.title'" inline-template>
+                <div class="flex gap-2">
+                    <network network="facebook">Facebook</network>
+                    <network network="twitter">Twitter</network>
+                    <network network="linkedin">LinkedIn</network>
+                    <network network="whatsapp">WhatsApp</network>
+                </div>
+            </social-sharing>
 
             <div data-aos="fade-right" data-aos-delay="100">
                 <router-link to="/" role="tab" aria-selected="true" class="inline-flex items-center  
@@ -39,10 +96,7 @@ import blackBar from '../assets/icons/blackBar.svg'
 
             <!-- both two parts down are here -->
             <div class="max-w-4xl mx-auto space-y-6 w-full">
-                <div
-                    data-aos="zoom-in" 
-                    data-aos-delay="200"
-                    data-aos-duration="1000"
+                <div data-aos="zoom-in" data-aos-delay="200" data-aos-duration="1000"
                     class=" shadow-md bg-gradient-to-r from-primary/5 to-primary/10 flex flex-col items-start  lg:flex-row  lg:justify-between lg:items-center  border border-gray-200 rounded-xl  gap-3 p-6 ">
 
                     <!-- top -->
@@ -54,7 +108,7 @@ import blackBar from '../assets/icons/blackBar.svg'
                                 class="inline-flex items-center justify-center w-fit bg-primary/10  text-primary text-sm font-medium rounded-xl border border-primary/10 px-2 py-0.5">Results</span>
                         </div>
 
-                        <h4 class="text-s font-semibold">Question?
+                        <h4 class="text-s font-semibold">{{ questions.question }}
                         </h4>
                         <div class="flex gap-2 justify-center items-center">
                             <span class="flex items-center gap-1 text-gray-500">
@@ -116,14 +170,12 @@ import blackBar from '../assets/icons/blackBar.svg'
                 <div class="grid lg:grid-cols-4 gap-6">
 
                     <div class="lg:col-span-1  space-y-4">
-                        <div
-                            data-aos="fade-up" 
-                            data-aos-delay="300"
+                        <div data-aos="fade-up" data-aos-delay="300"
                             class="flex gap-6 flex-col  bg-white p-6 py-5 border border-gray-300 rounded-lg shadow-md ">
 
                             <div class="flex justify-between items-center">
                                 <div class=" flex flex-col">
-                                    <span class="text-2xl font-bold">0</span>
+                                    <span class="text-2xl font-bold">{{ totalVotes }}</span>
                                     <span class="text-sm text-gray-500">Total Responses</span>
                                 </div>
 
@@ -141,13 +193,11 @@ import blackBar from '../assets/icons/blackBar.svg'
                             </div>
                         </div>
 
-                        <div
-                            data-aos="fade-up" 
-                            data-aos-delay="400"
+                        <div data-aos="fade-up" data-aos-delay="400"
                             class="flex flex-col gap-6  bg-white p-6 py-5 border border-gray-300 rounded-lg shadow-md ">
                             <div class="flex justify-between items-center">
                                 <div class="flex flex-col ">
-                                    <span class="text-2xl font-bold">0</span>
+                                    <span class="text-2xl font-bold">{{ questions.options?.length }}</span>
                                     <span class="text-sm text-gray-500">Answer Options</span>
                                 </div>
 
@@ -164,9 +214,7 @@ import blackBar from '../assets/icons/blackBar.svg'
                             </div>
                         </div>
 
-                        <div 
-                            data-aos="fade-up" 
-                            data-aos-delay="450"
+                        <div data-aos="fade-up" data-aos-delay="450"
                             class="flex flex-col justify-between  bg-white p-6 py-5 border border-gray-300 rounded-lg shadow-md ">
                             <div class="flex gap-2 justify-between items-center">
                                 <div class="flex flex-col  ">
@@ -188,10 +236,7 @@ import blackBar from '../assets/icons/blackBar.svg'
                     </div>
 
                     <div class="lg:col-span-3">
-                        <div
-                            data-aos="fade-left" 
-                            data-aos-delay="300"
-                            data-aos-duration="1000"
+                        <div data-aos="fade-left" data-aos-delay="300" data-aos-duration="1000"
                             class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-md gap-3 pt-6 space-y-6  px-6 pb-6">
 
                             <h4 class=" inline-flex  gap-2 items-center m-0">
@@ -235,13 +280,12 @@ import blackBar from '../assets/icons/blackBar.svg'
                                 </button>
 
                             </div>
+
                             <!-- with response -->
 
                             <div class="space-y-6 ">
 
-                                <div 
-                                    data-aos="slide-right" 
-                                    data-aos-delay="600"
+                                <div v-for="option in questions.options" data-aos="slide-right" data-aos-delay="600"
                                     class="space-y-3 hover:scale-[1.01] transition-all duration-300">
 
                                     <div></div>
@@ -252,11 +296,11 @@ import blackBar from '../assets/icons/blackBar.svg'
                                             class="w-8 h-8 bg-primary text-white font-medium  flex items-center justify-center rounded-full ">
                                             1</div>
 
-                                        <p class="font-medium text-primary text-sm">Options</p>
+                                        <p class="font-medium text-primary text-sm">{{ option.option_text }}</p>
 
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
+                                        <svg v-show="mostVotes == option.votes_count" xmlns="http://www.w3.org/2000/svg"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                             class="lucide lucide-trophy h-4 w-4 text-amber-500" aria-hidden="true">
                                             <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path>
                                             <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path>
@@ -267,8 +311,9 @@ import blackBar from '../assets/icons/blackBar.svg'
                                         </svg>
 
                                         <div class="ml-auto flex flex-col justify-start items-center">
-                                            <span class="text-primary font-bold text-lg ">75%</span>
-                                            <span class="text-sm  text-gray-500">vote 1</span>
+                                            <span class="text-primary font-bold text-lg ">{{ Math.round(
+                                                (option.votes_count / totalVotes) * 100) }} %</span>
+                                            <span class="text-sm  text-gray-500">vote {{ option.votes_count }}</span>
                                         </div>
 
                                     </div>
@@ -279,55 +324,13 @@ import blackBar from '../assets/icons/blackBar.svg'
 
                                         <div role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"
                                             class="absolute top-0 left-0 h-3 bg-primary rounded-full transition-all duration-500 ease-in-out "
-                                            style="width: 75%;">
+                                            :style="{ width: ((option.votes_count / totalVotes) * 100) + '%' }">
                                         </div>
                                     </div>
 
                                 </div>
-                                <div 
-                                    data-aos="slide-right" 
-                                    data-aos-delay="700"
-                                    class="space-y-3 hover:scale-[1.01] transition-all duration-300">
 
-                                    <div class="flex gap-3 justify-start items-center">
 
-                                        <div
-                                            class="w-8 h-8 bg-primary text-white font-medium  flex items-center justify-center rounded-full ">
-                                            1</div>
-
-                                        <p class="font-medium text-primary text-sm">Options</p>
-
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="hidden lucide lucide-trophy h-4 w-4 text-amber-500"
-                                            aria-hidden="true">
-                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path>
-                                            <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path>
-                                            <path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path>
-                                            <path d="M4 22h16"></path>
-                                            <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path>
-                                            <path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                                        </svg>
-
-                                        <div class="ml-auto flex flex-col justify-start items-center">
-                                            <span class="text-primary font-bold text-lg ">75%</span>
-                                            <span class="text-sm  text-gray-500">vote 1</span>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- progress bar -->
-                                    <div class="relative w-full bg-primary/10 rounded-full h-3 p-1.5 ">
-                                        <!-- Outer bar (background) -->
-
-                                        <div role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"
-                                            class="absolute top-0 left-0 h-3 bg-primary rounded-full transition-all duration-500 ease-in-out "
-                                            style="width: 75%;">
-                                        </div>
-                                    </div>
-
-                                </div>
                             </div>
 
                         </div>

@@ -10,12 +10,12 @@ const activeTab = ref('dashbord');
 <template>
     <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center  gap-6 ">
         <div class="flex flex-col gap-2">
-            <span class="text-xl font-semibold">
+            <span class="text-xl font-extrabold">
                 <slot name="title">
                     Dashboard
                 </slot>
             </span>
-            <span class=" text-gray-400 ">
+            <span class="text-sm text-gray-700 ">
                 <slot name="subtitle">
                     Manage your polls, track engagement, and analyze results.
                 </slot>
@@ -52,6 +52,28 @@ const activeTab = ref('dashbord');
                     <path d="M12 5v14"></path>
                 </svg>
                 <span class="hidden sm:inline">Create</span>
+            </router-link>
+
+
+            <router-link to="/draft" role="tab" :aria-selected="$route.path === '/draft'"
+                :data-state="$route.path === '/draft' ? 'active' : 'inactive'" class="flex items-center gap-2 justify-center text-sm font-medium rounded-xl border border-transparent px-2 py-1 h-[calc(100%-1px)] 
+                    transition-[color,box-shadow] 
+                    text-foreground  
+                    focus-visible:ring-[3px] focus-visible:outline-1 focus-visible:ring-ring focus-visible:outline-ring
+                    disabled:pointer-events-none disabled:opacity-50
+                    data-[state=active]:shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-file-text h-5 w-5 " aria-hidden="true">
+                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z">
+
+                    </path>
+                    <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                    <path d="M10 9H8"></path>
+                    <path d="M16 13H8"></path>
+                    <path d="M16 17H8"></path>
+                </svg>
+                <span class="hidden sm:inline">Draft</span>
             </router-link>
 
 

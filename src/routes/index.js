@@ -7,6 +7,7 @@ import CastVote from "../views/CastVote.vue";
 import Login from "../views/Login.vue";
 import SignUp from "../views/SignUp.vue";
 import Test from "../views/Test.vue";
+import Draft from "../views/Draft.vue";
 
 
 const routes = [
@@ -32,14 +33,24 @@ const routes = [
 },
 
 {
-path:'/result',
+  path:'/draft', 
+  component:Draft,
+  meta: { requiresAuth: true }
+},
+
+{
+path:'/result/:pollId',
+name:"result",
 component:ResultPolls,
+props:true,
 meta: { requiresAuth: true }
 },
+
 {
-  path:'/cast-vote/:optionId?',
+  path:'/cast-vote/:optionId',
   name:'CastVote',
   component:CastVote,
+  props:true,
   meta: { requiresAuth: true }
 },
 {

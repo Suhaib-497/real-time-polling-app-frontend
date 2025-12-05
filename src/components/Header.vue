@@ -64,7 +64,7 @@ import settingIcon from '../assets/icons/gear_setting_settings_tools_icon.svg';
             <div class="h-6 w-px border-gray-400 border"></div>
 
             <div>Auth </div>
-
+                
         </div>
     </nav>
     </div>

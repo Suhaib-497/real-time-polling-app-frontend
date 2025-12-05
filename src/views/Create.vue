@@ -18,17 +18,75 @@ const checkInputValue = reactive({
     options: ['', ''] // start with 2 options
 });
 
+// Editing state: when editing an existing poll/draft
+const editingId = ref<number | null>(null);
+// metadata per option to keep existing DB ids
+const optionsMeta = ref<Array<{ id?: number | null }>>([]);
+// ids of options marked for deletion
+const deletedOptionIds = ref<number[]>([]);
+
 // const countOptions = ref(checkInputValue.options.length);
 
 const addNewOption = () => {
     checkInputValue.options.push('');
-
+    optionsMeta.value.push({});
 };
+
+onMounted(() => {
+    // If a draft was stored for editing, load it into the form
+    try {
+        const raw = localStorage.getItem('editingDraft');
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        if (draft?.id) editingId.value = draft.id;
+        if (draft?.question) checkInputValue.question = draft.question;
+
+        if (Array.isArray(draft?.options)) {
+            // options may be objects or strings; keep meta for ids
+            const opts: string[] = [];
+            const meta: Array<{ id?: number | null }> = [];
+            for (const o of draft.options) {
+                if (o == null) {
+                    opts.push('');
+                    meta.push({});
+                    continue;
+                }
+                if (typeof o === 'string') {
+                    opts.push(o);
+                    meta.push({});
+                    continue;
+                }
+                // object
+                opts.push(o.option_text || o.text || o.option || '');
+                meta.push({ id: o.id ?? null });
+            }
+            // ensure at least two options
+            if (opts.length < 2) {
+                while (opts.length < 2) {
+                    opts.push('');
+                    meta.push({});
+                }
+            }
+            checkInputValue.options.splice(0, checkInputValue.options.length, ...opts);
+            optionsMeta.value.splice(0, optionsMeta.value.length, ...meta);
+        }
+
+        // remove the stored editing draft so subsequent visits don't auto-load
+        localStorage.removeItem('editingDraft');
+    } catch (e) {
+        // ignore parse errors
+        console.error('failed to load editingDraft', e);
+    }
+});
 
 const removeOption = (index: number) => {
     if (checkInputValue.options.length > 2) {
+        const meta = optionsMeta.value[index];
+        if (meta && meta.id) {
+            deletedOptionIds.value.push(meta.id as number);
+        }
         checkInputValue.options.splice(index, 1);
-
+        optionsMeta.value.splice(index, 1);
     }
 };
 
@@ -37,22 +95,89 @@ const hasValues = () => {
         checkInputValue.options.every(opt => opt.trim() !== '');
 };
 
+
+const oneHasValues = () => {
+    return checkInputValue.question.trim() !== '' ||
+        checkInputValue.options.some(opt => opt.trim() !== '');
+};
+
 const submitPoll = async () => {
     isCreating.value = true;
     console.log('values', checkInputValue);
 
 
     try {
-        await axiosClient.post('/polls', {
+        // build options payload: include existing ids and new option_texts, plus deletes
+        const optionsPayload: any[] = [];
+        for (let i = 0; i < checkInputValue.options.length; i++) {
+            const text = checkInputValue.options[i];
+            const meta = optionsMeta.value[i] || {};
+            if (meta.id) {
+                optionsPayload.push({ id: meta.id, option_text: text });
+            } else {
+                optionsPayload.push({ option_text: text });
+            }
+        }
+        // include deletes
+        for (const id of deletedOptionIds.value) {
+            optionsPayload.push({ id, delete: true });
+        }
+
+        const payload: any = {
             question: checkInputValue.question,
-            options: checkInputValue.options
-        })
+            options: optionsPayload,
+            is_published: true
+        };
+        if (editingId.value) payload.id = editingId.value;
+
+        await axiosClient.post('/polls', payload);
 
         setTimeout(() => {
             router.push('/')
         }, 1500)
     } catch (error) {
+        console.error('create poll failed', error);
+    } finally {
+        isCreating.value = false;
+    }
+};
 
+const saveDraft = async () => {
+    // only allow saving draft when there are some values
+    if (!oneHasValues()) return;
+    isCreating.value = true;
+    try {
+        // build options payload similar to submit
+        const optionsPayload: any[] = [];
+        for (let i = 0; i < checkInputValue.options.length; i++) {
+            const text = checkInputValue.options[i];
+            const meta = optionsMeta.value[i] || {};
+            if (meta.id) {
+                optionsPayload.push({ id: meta.id, option_text: text });
+            } else {
+                optionsPayload.push({ option_text: text });
+            }
+        }
+        for (const id of deletedOptionIds.value) {
+            optionsPayload.push({ id, delete: true });
+        }
+
+        const payload: any = {
+            question: checkInputValue.question,
+            options: optionsPayload,
+            is_published: false
+        };
+        if (editingId.value) payload.id = editingId.value;
+
+        await axiosClient.post('/polls', payload);
+
+        setTimeout(() => {
+            router.push('/draft');
+        }, 600);
+    } catch (error) {
+        console.error('save draft failed', error);
+    } finally {
+        isCreating.value = false;
     }
 };
 
@@ -207,10 +332,16 @@ const submitPoll = async () => {
                         <div class="my-4 border border-gray-200"></div>
 
                         <div class="flex  items-start gap-2 ">
-                            <button class=" bg-gray-50 border border-gray-200 text-sm  w-full rounded-lg py-2 
-                            hover:bg-primary/20 hover:text-blue-800
-                            transform transition-all duration-300 ">
-                                Save as draft</button>
+                            <button type="button" @click="saveDraft" :disabled="!oneHasValues() || isCreating" :class="[
+                                'bg-gray-50 border border-gray-200 text-sm  text-center w-full rounded-lg py-2 hover:bg-primary/20 hover:text-blue-800 transform transition-all duration-300',
+                                {
+                                    'opacity-100': oneHasValues(),
+                                    'opacity-50': !oneHasValues(),
+                                    'cursor-not-allowed': !oneHasValues() || isCreating
+                                }
+                            ]">
+                                {{ editingId ? 'Update' : 'Save as draft' }}
+                            </button>
 
 
 
@@ -224,10 +355,10 @@ const submitPoll = async () => {
                                 }
                             ]">
                                 <AtomSpinner v-if="isCreating" :animation-duration="1000" :size="33" color="#FFFFFF" />
-                                <span v-if="isCreating">Creating Poll...</span>
+                                <span v-if="isCreating">{{ editingId ? 'Updating...' : 'Creating Poll...' }}</span>
 
                                 <span v-else class="inline-flex items-center justify-center gap-2">
-                                    Craft Poll
+                                    {{ editingId ? 'Published' : 'Craft Poll' }}
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" class="lucide lucide-wand-sparkles h-4 w-4"
